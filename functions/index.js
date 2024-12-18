@@ -1,7 +1,10 @@
-export default {
-  async fetch(request, env, ctx) {
-    if (request.method === 'GET') {
-      try {
+addEventListener('fetch', event => {
+  event.respondWith(handleRequest(event.context));
+});
+
+async function handleRequest(context) {
+  const { request, env } = context;
+    try {
         // 获取 Vue 和 Tailwind 的资源
         const vueScript = 'https://unpkg.com/vue@3/dist/vue.global.prod.js';
         const tailwindCSS = 'https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css';
@@ -154,14 +157,11 @@ export default {
           </script>
         </body>
         </html>`;
-
         return new Response(html, {
           headers: { 'Content-Type': 'text/html;charset=UTF-8' },
         });
       } catch (error) {
         return new Response(`Error: ${error.message}`, { status: 500 });
       }
-    }
     return new Response("Method Not Allowed", { status: 405 });
-  }
 };
