@@ -47,11 +47,11 @@ export async function onRequest({ request, params, env }) {
           <meta charset="UTF-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
           <title>Docker Image Sync</title>
-          <style>${tailwindCSS}</style>
+          <style type="text/css">${tailwindCSS}</style>
         </head>
         <body class="bg-gray-50">
           <div id="app"></div>
-          <script>${vueScript}</script>
+          <script type="text/javascript">${vueScript}</script>
           <script>
             const { createApp, h } = Vue;
 
