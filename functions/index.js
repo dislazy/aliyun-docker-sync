@@ -1,9 +1,4 @@
-addEventListener('fetch', event => {
-  event.respondWith(handleRequest(event.context));
-});
-
-async function handleRequest(context) {
-  const { request, env } = context;
+export async function onRequest({ request, params, env }) {
     try {
         // 获取 Vue 和 Tailwind 的资源
         const vueScript = 'https://unpkg.com/vue@3/dist/vue.global.prod.js';
