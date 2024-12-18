@@ -1,14 +1,12 @@
-export async function onRequest({ request, params, env }) {
-    // my_kv 是您在项目中绑定命名空间时的变量名
-//    const visitCount = await my_kv.get('visitCount');
-//    let visitCountInt = Number(visitCount);
-//    visitCountInt += 1;
-//    await my_kv.put('visitCount', visitCountInt.toString());
+export default {
+  async fetch(request, env, ctx) {
     if (request.method === 'GET') {
       try {
-        const vueScript = await fetch('https://unpkg.com/vue@3/dist/vue.global.prod.js').then(r => r.text());
-        const tailwindCSS = await fetch('https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css').then(r => r.text());
+        // 获取 Vue 和 Tailwind 的资源
+        const vueScript = 'https://unpkg.com/vue@3/dist/vue.global.prod.js';
+        const tailwindCSS = 'https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css';
 
+        // HTML 模板
         const appTemplate = `
           <div class="min-h-screen bg-gradient-to-r from-pink-100 to-blue-100 flex items-center justify-center">
             <div class="bg-white shadow-lg rounded-lg p-8 max-w-xl w-full">
@@ -44,6 +42,7 @@ export async function onRequest({ request, params, env }) {
           </div>
         `;
 
+        // 主页面 HTML
         const html = `<!DOCTYPE html>
         <html>
         <head>
@@ -61,8 +60,8 @@ export async function onRequest({ request, params, env }) {
             const App = {
               data() {
                 return {
-                  repoOwner: env.REPO_OWNER, // 从环境变量读取
-                  repoName: env.REPO_NAME', // 从环境变量读取
+                  repoOwner: '${env.REPO_OWNER}', // 从环境变量读取
+                  repoName: '${env.REPO_NAME}', // 从环境变量读取
                   images: [{ source: '', target: '', platform: 'linux/amd64' }],
                   message: null,
                   messageClass: null
@@ -110,14 +109,11 @@ export async function onRequest({ request, params, env }) {
                       throw new Error(\`HTTP error \${response.status}: \${errorData.message || response.statusText}\`);
                     }
 
-                    // 获取当前时间
                     const now = new Date();
                     const formattedTime = \`\${now.getFullYear()}-\${(now.getMonth() + 1).toString().padStart(2, '0')}-\${now.getDate().toString().padStart(2, '0')} \${now.getHours().toString().padStart(2, '0')}:\${now.getMinutes().toString().padStart(2, '0')}:\${now.getSeconds().toString().padStart(2, '0')}\`;
 
-                    // 生成拉取命令
-                    const pullCommands = this.images.map(image => \`docker pull env.ALIYUN_REGISTRY}/env.ALIYUN_NAME_SPACE/\${image.target}\`).join('<br><br>');
+                    const pullCommands = this.images.map(image => \`docker pull ${env.ALIYUN_REGISTRY}/${env.ALIYUN_NAME_SPACE}/\${image.target}\`).join('<br><br>');
 
-                    // 更新消息
                     this.message = \`同步请求已发送，时间：\${formattedTime}<br>稍等30S~60S后，请执行以下拉取命令：<br><br>\${pullCommands}<br>\`;
                     this.messageClass = 'bg-green-100 text-green-600';
                   } catch (error) {
@@ -129,7 +125,7 @@ export async function onRequest({ request, params, env }) {
               },
               computed: {
                 githubToken() {
-                  return env.GITHUB_TOKEN; // 从环境变量读取
+                  return '${env.GITHUB_TOKEN}'; // 从环境变量读取
                 },
                 imageTargets() {
                   return this.images.map(image => {
@@ -160,10 +156,7 @@ export async function onRequest({ request, params, env }) {
         </html>`;
 
         return new Response(html, {
-          headers: {
-              'Content-Type': 'text/html;charset=UTF-8',
-              'Access-Control-Allow-Origin': '*',
-          },
+          headers: { 'Content-Type': 'text/html;charset=UTF-8' },
         });
       } catch (error) {
         return new Response(`Error: ${error.message}`, { status: 500 });
@@ -171,4 +164,4 @@ export async function onRequest({ request, params, env }) {
     }
     return new Response("Method Not Allowed", { status: 405 });
   }
-
+};
