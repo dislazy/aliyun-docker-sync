@@ -1,8 +1,8 @@
 export async function onRequest({ request, params, env }) {
     try {
         // 获取 Vue 和 Tailwind 的资源
-        const vueScript = 'https://unpkg.com/vue@3/dist/vue.global.prod.js';
-        const tailwindCSS = 'https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css';
+        const vueScript = await fetch('https://unpkg.com/vue@3/dist/vue.global.prod.js').then(r => r.text());
+        const tailwindCSS = await fetch('https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css').then(r => r.text());
 
         // HTML 模板
         const appTemplate = `
