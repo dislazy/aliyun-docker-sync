@@ -14,3 +14,14 @@
 - GITHUB_REPO  //github仓库名
 - CHECK_TOKEN  //自己填充的token，防刷
 ```
+
+
+## 可选增加turnstile验证码
+```
+#js引入
+ <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onloadTurnstileCallback" defer></script>
+```
+```
+#验证码的js放置
+  <div class="cf-turnstile" data-sitekey="0x4AAAAAAALlscS15bnCUFWC"></div>
+```
