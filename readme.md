@@ -23,5 +23,10 @@
 ```
 ```
 #验证码的js放置
-  <div class="cf-turnstile" data-sitekey="0x4AAAAAAALlscS15bnCUFWC"></div>
+<div class="flex justify-between">
+#验证码的存放位置
+            <div class="cf-turnstile" data-sitekey="0xAAAAAAAAAA"></div>
+              <button @click="addImage" type="button" class="bg-blue-400 hover:bg-blue-500 text-white font-bold py-2 px-4 rounded-lg transition duration-300">添加镜像</button>
+              <button @click="syncImages" type="button" class="bg-green-400 hover:bg-green-500 text-white font-bold py-2 px-4 rounded-lg transition duration-300">同步镜像</button>
+            </div>
 ```
