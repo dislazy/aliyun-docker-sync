@@ -66,8 +66,8 @@ async function handleRequest(request) {
           const App = {
             data() {
               return {
-                repoOwner: '${REPO_OWNER}', // 从环境变量读取
-                repoName: '${REPO_NAME}', // 从环境变量读取
+                repoOwner: '${GITHUB_OWNER}', // 从环境变量读取
+                repoName: '${GITHUB_REPO}', // 从环境变量读取
                 images: [{ source: 'vaultwarden/server:1.26.0', target: 'bitwarden:1.26.0', region: 'shanghai',namespace:'mirco_service'}],
                 message: null,
                 messageClass: null,

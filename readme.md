@@ -10,7 +10,7 @@
 ## work.js的ENV配置
 ```
 - GITHUB_TOKEN  // github的请求api权限token
-- REPO_OWNER  //github用户名
-- REPO_NAME  //github仓库名
+- GITHUB_OWNER  //github用户名
+- GITHUB_REPO  //github仓库名
 - CHECK_TOKEN  //自己填充的token，防刷
 ```
