@@ -1,0 +1,30 @@
+# 同步镜像仓库的镜像到阿里云仓库
+name: Sync Dokcer Image To Aliyun Repo By Api
+
+on:
+  repository_dispatch:
+    types: sync_docker
+
+jobs:
+  sync-task:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        #接收Api的参数
+        images: '${{ github.event.client_payload.images }}'
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      - uses: actions/checkout@v2
+      - name: sync ${{ matrix.images.source }}
+        run: |
+          docker pull $source_docker_image
+          docker tag $source_docker_image $target_docker_image
+          docker login --username=${{secrets.DOCKER_USERNAME}} --password=${{secrets.DOCKER_PASSWORD}} registry.cn-${{matrix.images.region}}.aliyuncs.com
+          docker push $target_docker_image
+          echo "docker sync success"
+        env:
+          source_docker_image:  ${{ matrix.images.source }}
+          target_docker_image: registry.cn-${{matrix.images.region}}.aliyuncs.com/${{matrix.images.namespace}}/${{ matrix.images.target }}
