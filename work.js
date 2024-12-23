@@ -2,8 +2,108 @@ addEventListener('fetch', event => {
   event.respondWith(handleRequest(event.request));
 });
 
+const COOKIE_NAME = 'auth_token';
+const COOKIE_EXPIRATION = 30 * 60; // 30分钟内无需验证密码
+
 async function handleRequest(request) {
+  const url = new URL(request.url);
+
+  // 检查是否存在有效的Cookie
+  const cookie = getCookie(request, COOKIE_NAME);
+  if (!cookie && url.pathname !== '/login') {
+    return Response.redirect(new URL('/login', request.url));
+  }
+
   if (request.method === 'GET') {
+    if (url.pathname === '/login') {
+      return handleLogin(request);
+    } else {
+      return handleMainPage(request);
+    }
+  } else if (request.method === 'POST' && url.pathname === '/login') {
+    return handleLoginPost(request);
+  }
+
+  return new Response("Method Not Allowed", { status: 405 });
+}
+
+function handleLogin(request) {
+  const loginForm = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>登录</title>
+      <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+      <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onloadTurnstileCallback" defer></script>
+    </head>
+    <body class="min-h-screen bg-gradient-to-r from-pink-100 to-blue-100 flex items-center justify-center">
+      <div class="bg-white shadow-lg rounded-lg p-8 max-w-xl w-full">
+        <h1 class="text-3xl font-bold text-center text-gray-800 mb-6">登录</h1>
+        <form method="POST" class="space-y-4">
+          <div>
+            <input type="password" name="password" id="password" placeholder="请输入密码" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400">
+          </div>
+          <div class="cf-turnstile" data-sitekey="0XXSAASAADDASDDAEE"></div>
+          <div>
+            <button type="submit" class="w-full bg-blue-400 hover:bg-blue-500 text-white font-bold py-2 px-4 rounded-lg transition duration-300">登录</button>
+          </div>
+        </form>
+      </div>
+    </body>
+    </html>
+  `;
+
+  return new Response(loginForm, {
+    headers: { 'Content-Type': 'text/html;charset=UTF-8' },
+  });
+}
+
+async function handleLoginPost(request) {
+  const formData = await request.formData();
+  const password = formData.get('password');
+
+  if (password === PASSWORD) {
+    const token = generateToken();
+    const headers = {
+      'Set-Cookie': `${COOKIE_NAME}=${token}; Path=/; Max-Age=${COOKIE_EXPIRATION}; HttpOnly; Secure; SameSite=Strict`,
+      'Location': '/',
+    };
+    return new Response('Login Successful', {
+      status: 302,
+      headers,
+    });
+  } else {
+    const errorPage = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>密码错误</title>
+        <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+      </head>
+      <body class="min-h-screen bg-gradient-to-r from-pink-100 to-blue-100 flex items-center justify-center">
+        <div class="bg-white shadow-lg rounded-lg p-8 max-w-xl w-full">
+          <h1 class="text-3xl font-bold text-center text-gray-800 mb-6">密码错误</h1>
+          <p class="text-center text-gray-600 mb-6">您输入的密码不正确，请返回登录页重新输入。</p>
+          <div class="text-center ">
+            <a href="/login" class="block w-full bg-blue-400 hover:bg-blue-500 text-white font-bold py-2 px-4 rounded-lg transition duration-300 text-center">返回登录页</a>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    return new Response(errorPage, {
+      headers: { 'Content-Type': 'text/html;charset=UTF-8' },
+      status: 401,
+    });
+  }
+}
+
+async function handleMainPage(request) {
     try {
       const vueScript = await fetch('https://unpkg.com/vue@3/dist/vue.global.prod.js').then(r => r.text());
       const tailwindCSS = await fetch('https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css').then(r => r.text());
@@ -12,11 +112,6 @@ async function handleRequest(request) {
         <div class="min-h-screen bg-gradient-to-r from-pink-100 to-blue-100 flex items-center justify-center">
           <div class="bg-white shadow-lg rounded-lg p-8 max-w-xl w-full">
             <h1 class="text-3xl font-bold text-center text-gray-800 mb-6">Docker 镜像同步</h1>
-            <div class="mb-4">
-              <label class="block text-gray-700 text-sm font-bold mb-2">全局TOKEN:</label>
-              <input type="password" v-model="token" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400">
-            </div>
-
             <div v-for="(image, index) in images" :key="index" class="border border-gray-200 rounded-lg p-6 mb-6 bg-white shadow-sm">
               <h2 class="text-xl font-semibold text-gray-700 mb-4">镜像 {{ index + 1 }}</h2>
               <div class="mb-4">
@@ -70,8 +165,7 @@ async function handleRequest(request) {
                 repoName: '${GITHUB_REPO}', // 从环境变量读取
                 images: [{ source: 'vaultwarden/server:1.26.0', target: 'bitwarden:1.26.0', region: 'shanghai',namespace:'mirco_service'}],
                 message: null,
-                messageClass: null,
-                token:''
+                messageClass: null
               };
             },
             methods: {
@@ -92,12 +186,6 @@ async function handleRequest(request) {
                   this.messageClass = 'bg-red-100 text-red-600';
                   return;
                 }
-                if (this.token !== '${CHECK_TOKEN}') {
-                  this.message = 'token错误，无法执行镜像同步任务';
-                  this.messageClass = 'bg-red-100 text-red-600';
-                  return;
-                }
-
                 try {
                   const response = await fetch(
                     \`https://api.github.com/repos/\${this.repoOwner}/\${this.repoName}/dispatches\`,
@@ -169,6 +257,26 @@ async function handleRequest(request) {
     } catch (error) {
       return new Response(`Error: ${error.message}`, { status: 500 });
     }
+}
+
+function getCookie(request, name) {
+  const cookieString = request.headers.get('Cookie');
+  if (cookieString) {
+    const cookies = cookieString.split(';');
+    for (const cookie of cookies) {
+      const [key, value] = cookie.trim().split('=');
+      if (key === name) {
+        return value;
+      }
+    }
   }
-  return new Response("Method Not Allowed", { status: 405 });
+  return null;
+}
+
+function generateToken() {
+  const array = new Uint8Array(32); // 32字节 = 256位
+  crypto.getRandomValues(array); // 使用 crypto.getRandomValues 生成随机值
+  return Array.from(array)
+    .map(byte => byte.toString(16).padStart(2, '0')) // 将每个字节转换为两位的十六进制字符串
+    .join(''); // 拼接成一个完整的字符串
 }
